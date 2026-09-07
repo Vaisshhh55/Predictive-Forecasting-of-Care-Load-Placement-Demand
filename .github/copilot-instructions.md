@@ -1,0 +1,6 @@
+- Verify the project root is used for all work.
+- Build a complete Python Streamlit project for predictive forecasting of care load and placement demand.
+- Keep the app runnable locally with Python 3.11.
+- Document setup and launch steps in the README.
+- Prefer simple, readable code with modular components.
+- Use synthetic demo data when the external dataset is not available locally.
