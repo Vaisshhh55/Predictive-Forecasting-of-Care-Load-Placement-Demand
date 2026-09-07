@@ -62,17 +62,25 @@ def _is_statistical_model(model_name: str) -> bool:
 def _statistical_forecast(values: pd.Series, model_name: str, horizon: int) -> np.ndarray:
     values = values.astype(float).reset_index(drop=True)
     normalized_name = model_name.lower()
+    if len(values) < 2:
+        return np.repeat(values.iloc[-1], horizon)
     if normalized_name == "naive persistence":
         return np.repeat(values.iloc[-1], horizon)
     if normalized_name == "moving average":
         return np.repeat(values.tail(7).mean(), horizon)
     if normalized_name == "exponential smoothing":
-        model = ExponentialSmoothing(values, trend="add", seasonal=None).fit(optimized=True)
-        return model.forecast(horizon).to_numpy()
+        try:
+            model = ExponentialSmoothing(values, trend="add", seasonal=None).fit(optimized=True)
+            return model.forecast(horizon).to_numpy()
+        except (ValueError, IndexError):
+            return np.repeat(values.iloc[-1], horizon)
 
     seasonal_order = (1, 0, 1, 7) if normalized_name == "sarima" else (0, 0, 0, 0)
-    model = ARIMA(values, order=(1, 1, 1), seasonal_order=seasonal_order).fit()
-    return model.forecast(horizon).to_numpy()
+    try:
+        model = ARIMA(values, order=(1, 1, 1), seasonal_order=seasonal_order).fit()
+        return model.forecast(horizon).to_numpy()
+    except (ValueError, IndexError, np.linalg.LinAlgError):
+        return np.repeat(values.iloc[-1], horizon)
 
 
 def _future_feature_frame(history: pd.DataFrame, target: str, model, horizon: int) -> pd.DataFrame:
@@ -161,7 +169,7 @@ def train_and_evaluate_model(
     test_mape = float(fold_df["mape"].mean())
     fold_mae_std = float(fold_df["mae"].std(ddof=0))
 
-    split = max(1, len(df) - horizon)
+    split = min(max(2, len(df) - horizon), len(df) - 1)
     X_train = X.iloc[:split]
     y_train = y.iloc[:split]
     y_actual = y.iloc[split:]

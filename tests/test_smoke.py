@@ -1,7 +1,12 @@
 from io import StringIO
 
 from app.data_loader import load_dataset, build_feature_frame
-from app.forecasting import create_forecast_table, decompose_series, evaluate_horizons
+from app.forecasting import (
+    compare_model_performance,
+    create_forecast_table,
+    decompose_series,
+    evaluate_horizons,
+)
 
 
 def test_sample_dataset_loads():
@@ -85,3 +90,11 @@ def test_numeric_text_columns_are_converted_for_feature_engineering():
     features = build_feature_frame(load_dataset(source))
 
     assert features["CBP_Care_Load"].dtype.kind in "fi"
+
+
+def test_short_uploaded_dataset_supports_model_comparison():
+    features = build_feature_frame(load_dataset("data/alternate_uac_forecasting.csv"))
+    comparison = compare_model_performance(features, "HHS_Care_Load")
+
+    assert len(comparison) == 8
+    assert comparison["Test MAE"].notna().all()
