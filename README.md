@@ -142,6 +142,8 @@ streamlit run app/main.py
 python -m pytest -q
 ```
 
+For development and testing, install the test runner separately with `python -m pip install pytest==8.3.2`.
+
 ## Implemented Dashboard Requirements
 
 The dashboard includes care-load and placement-demand forecasts, baseline/statistical/machine-learning model comparison, confidence intervals, time-series decomposition, holiday and calendar features, strict time-based validation, seven-, thirty-, and ninety-day evaluation, operational KPIs, capacity-threshold controls, and scenario comparison.

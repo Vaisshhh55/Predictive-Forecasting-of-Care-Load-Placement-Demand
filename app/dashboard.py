@@ -22,6 +22,26 @@ from app.forecasting import (
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "sample_uac_forecasting.csv"
 
 
+@st.cache_data(show_spinner=False)
+def _cached_model_result(feature_df: pd.DataFrame, target: str, model_name: str, horizon: int):
+    return train_and_evaluate_model(feature_df, target, model_name, horizon=horizon)
+
+
+@st.cache_data(show_spinner=False)
+def _cached_forecast(feature_df: pd.DataFrame, target: str, horizon: int, model_name: str):
+    return create_forecast_table(feature_df, target, horizon=horizon, model_name=model_name)
+
+
+@st.cache_data(show_spinner=False)
+def _cached_model_comparison(feature_df: pd.DataFrame, target: str):
+    return compare_model_performance(feature_df, target)
+
+
+@st.cache_data(show_spinner=False)
+def _cached_horizon_evaluation(feature_df: pd.DataFrame, target: str, model_name: str):
+    return evaluate_horizons(feature_df, target, model_name)
+
+
 def render_project_overview() -> None:
     st.markdown(
         """
@@ -329,11 +349,11 @@ def render_dashboard() -> None:
         return
 
     with st.spinner("Running forecasts..."):
-        result = train_and_evaluate_model(feature_df, target, model_name, horizon=horizon)
-        forecast_table = create_forecast_table(feature_df, target, horizon=horizon, model_name=model_name)
+        result = _cached_model_result(feature_df, target, model_name, horizon)
+        forecast_table = _cached_forecast(feature_df, target, horizon, model_name)
         confidence_table = build_confidence_intervals(forecast_table, variation=0.12)
-        comparison = compare_model_performance(feature_df, target)
-        horizon_evaluation = evaluate_horizons(feature_df, target, model_name)
+        comparison = _cached_model_comparison(feature_df, target)
+        horizon_evaluation = _cached_horizon_evaluation(feature_df, target, model_name)
 
     st.subheader(f"{target_label} forecast overview")
     col1, col2, col3 = st.columns(3)
@@ -380,11 +400,11 @@ def render_dashboard() -> None:
     st.plotly_chart(decomposition_fig, use_container_width=True)
 
     st.subheader("Discharge demand forecast panel")
-    placement_forecast = create_forecast_table(
+    placement_forecast = _cached_forecast(
         feature_df,
         "Placement_Demand",
-        horizon=horizon,
-        model_name=model_name,
+        horizon,
+        model_name,
     )
     placement_cols = st.columns(3)
     with placement_cols[0]:
