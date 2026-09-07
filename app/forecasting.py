@@ -249,7 +249,15 @@ def calculate_operational_kpis(
 
 def decompose_series(values: pd.Series, period: int = 7) -> pd.DataFrame:
     """Return observed, trend, seasonal, and residual components."""
-    decomposition = seasonal_decompose(values.astype(float), model="additive", period=period, extrapolate_trend="period")
+    clean_values = values.astype(float).reset_index(drop=True)
+    if len(clean_values) < period * 2:
+        raise ValueError(f"At least {period * 2} observations are required for decomposition.")
+    decomposition = seasonal_decompose(
+        clean_values,
+        model="additive",
+        period=period,
+        extrapolate_trend=period,
+    )
     return pd.DataFrame(
         {
             "Observed": decomposition.observed,
