@@ -240,7 +240,16 @@ def render_dashboard() -> None:
         unsafe_allow_html=True,
     )
 
-    uploaded_file = st.sidebar.file_uploader("Use operational CSV (optional)", type="csv")
+    st.sidebar.caption("Demo data is loaded automatically. Upload a real UAC CSV only if you have one.")
+    uploaded_file = st.sidebar.file_uploader("Upload operational UAC CSV (optional)", type="csv")
+    with st.sidebar.expander("Required CSV columns"):
+        st.markdown(
+            """
+            The uploaded file should contain Date, CBP intake, CBP care load, transfers to HHS,
+            HHS care load, and HHS discharges. Both the project's short column names and the
+            descriptive names from the brief are supported.
+            """
+        )
     if uploaded_file is not None:
         try:
             df = load_dataset(uploaded_file)
